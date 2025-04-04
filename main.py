@@ -1,5 +1,7 @@
-from flask import Flask, request, jsonify, send_from_directory
-from flask_cors import CORS
+from fastapi import FastAPI, HTTPException, File, UploadFile, Request, Form
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
@@ -7,14 +9,54 @@ import base64
 import io
 from PIL import Image
 import os
+from typing import Dict, List, Any, Optional
+from pydantic import BaseModel
 
 from simple_clip.clip import CLIP
 from simple_clip.encoders import ImageEncoder, TextEncoder
 from simple_clip.utils import get_image_encoder, get_text_encoder
 from transformers import AutoTokenizer
 
-app = Flask(__name__)
-CORS(app)
+# Pydantic models for request/response
+class TextRequest(BaseModel):
+    text: str
+
+class ImageRequest(BaseModel):
+    image: str  # Base64 encoded image
+
+class TextVectorResponse(BaseModel):
+    text: str
+    vector: List[float]
+    dim: int
+
+class ImageVectorResponse(BaseModel):
+    vector: List[float]
+    dim: int
+
+class HealthResponse(BaseModel):
+    status: str
+
+class EndpointInfo(BaseModel):
+    path: str
+    method: str
+    description: str
+
+class IndexResponse(BaseModel):
+    name: str
+    status: str
+    endpoints: List[EndpointInfo]
+
+# Create FastAPI app
+app = FastAPI(title="SimpleCLIP API")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Global variables
 model = None
@@ -49,24 +91,15 @@ def initialize():
             proj_dim=256
         )
         
-        # # Print model summary
-        # print(model)
-        
         # Load model weights if the file exists
         if os.path.exists(model_path):
             print(f"Loading model from: {model_path}")
             state_dict = torch.load(model_path, map_location=device)
             load_info = model.load_state_dict(state_dict, strict=False)
-            # print(f"Model loaded successfully: {load_info}")
-            # print(f"Missing keys: {load_info.missing_keys}")
-            # print(f"Unexpected keys: {load_info.unexpected_keys}")
         elif os.path.exists('models/clip_model.pth'):
             print(f"Loading model from: models/clip_model.pth")
             state_dict = torch.load('models/clip_model.pth', map_location=device)
             load_info = model.load_state_dict(state_dict, strict=False)
-            # print(f"Model loaded successfully: {load_info}")
-            # print(f"Missing keys: {load_info.missing_keys}")
-            # print(f"Unexpected keys: {load_info.unexpected_keys}")
         else:
             print(f"Warning: Model file not found at {model_path}, using untrained model")
         
@@ -89,16 +122,17 @@ def initialize():
         print(f"Error initializing model: {str(e)}")
         raise e
 
-@app.route("/vectorize/text", methods=["POST"])
-def vectorize_text():
-    if not request.is_json:
-        return jsonify({"error": "Request must be JSON"}), 400
-    
-    data = request.get_json()
-    if "text" not in data:
-        return jsonify({"error": "No text provided"}), 400
-    
-    text = data["text"]
+# Initialize on startup
+@app.on_event("startup")
+async def startup_event():
+    initialize()
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.post("/vectorize/text", response_model=TextVectorResponse)
+async def vectorize_text(request: TextRequest):
+    text = request.text
     
     # Encode text
     encoded_texts = tokenizer(
@@ -121,27 +155,20 @@ def vectorize_text():
     # Convert to list and return
     vector = text_features[0].cpu().numpy().tolist()
     
-    return jsonify({
-        "text": text,
-        "vector": vector,
-        "dim": len(vector)
-    })
+    return TextVectorResponse(
+        text=text,
+        vector=vector,
+        dim=len(vector)
+    )
 
-@app.route("/vectorize/image", methods=["POST"])
-def vectorize_image():
-    if not request.is_json:
-        return jsonify({"error": "Request must be JSON"}), 400
-    
-    data = request.get_json()
-    if "image" not in data:
-        return jsonify({"error": "No image provided"}), 400
-    
+@app.post("/vectorize/image", response_model=ImageVectorResponse)
+async def vectorize_image(request: ImageRequest):
     # Decode base64 image
     try:
-        image_data = base64.b64decode(data["image"])
+        image_data = base64.b64decode(request.image)
         image = Image.open(io.BytesIO(image_data)).convert('RGB')
     except Exception as e:
-        return jsonify({"error": f"Invalid image data: {str(e)}"}), 400
+        raise HTTPException(status_code=400, detail=f"Invalid image data: {str(e)}")
     
     # Transform and encode image
     img_tensor = transform(image).unsqueeze(0).to(device)
@@ -153,36 +180,35 @@ def vectorize_image():
     # Convert to list and return
     vector = image_features[0].cpu().numpy().tolist()
     
-    return jsonify({
-        "vector": vector,
-        "dim": len(vector)
-    })
+    return ImageVectorResponse(
+        vector=vector,
+        dim=len(vector)
+    )
 
-@app.route("/health", methods=["GET"])
-def health_check():
-    return jsonify({"status": "ok"})
+@app.get("/health", response_model=HealthResponse)
+async def health_check():
+    return HealthResponse(status="ok")
 
-@app.route("/ui", methods=["GET"])
-def serve_ui():
-    return send_from_directory('static', 'index.html')
+@app.get("/ui")
+async def serve_ui():
+    return FileResponse('static/index.html')
 
-@app.route("/test", methods=["GET"])
-def serve_test():
-    return send_from_directory('static', 'test.html')
+@app.get("/test")
+async def serve_test():
+    return FileResponse('static/test.html')
 
-
-@app.route('/', methods=['GET'])
-def index():
-    return jsonify({
-        "name": "SimpleCLIP API",
-        "status": "running",
-        "endpoints": [
-            {"path": "/health", "method": "GET", "description": "Health check endpoint"},
-            {"path": "/vectorize/text", "method": "POST", "description": "Text vectorization endpoint"},
-            {"path": "/vectorize/image", "method": "POST", "description": "Image vectorization endpoint"}
+@app.get("/", response_model=IndexResponse)
+async def index():
+    return IndexResponse(
+        name="SimpleCLIP API",
+        status="running",
+        endpoints=[
+            EndpointInfo(path="/health", method="GET", description="Health check endpoint"),
+            EndpointInfo(path="/vectorize/text", method="POST", description="Text vectorization endpoint"),
+            EndpointInfo(path="/vectorize/image", method="POST", description="Image vectorization endpoint")
         ]
-    })
+    )
 
 if __name__ == "__main__":
-    initialize()
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8081)))
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8081)), reload=True)

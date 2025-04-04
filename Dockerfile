@@ -22,7 +22,7 @@ COPY simple_clip /app/simple_clip/
 COPY static /app/static/
 
 # Copy application code
-COPY app.py .
+COPY main.py .
 
 # Environment variables
 ENV MODEL_PATH=/app/models/clip_model.pth
@@ -34,4 +34,4 @@ ENV PORT=8081
 EXPOSE 8081
 
 # Start the server
-CMD ["python", "app.py"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8081"]
