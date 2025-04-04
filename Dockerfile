@@ -15,14 +15,10 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy simple_clip package
-COPY simple_clip /app/simple_clip/
+# Copy the application code
+COPY app /app/app/
 
-# Copy static files
-COPY static /app/static/
-
-# Copy application code
-COPY main.py .
+ENV PYTHONPATH=/app/app
 
 # Environment variables
 ENV MODEL_PATH=/app/models/clip_model.pth
@@ -34,4 +30,4 @@ ENV PORT=8081
 EXPOSE 8081
 
 # Start the server
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8081"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8081"]
