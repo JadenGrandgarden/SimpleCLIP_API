@@ -16,7 +16,7 @@ services:
               count: 1
               capabilities: [gpu]
     environment:
-      - MODEL_PATH=/app/models/clip_model.pth
+      - MODEL_PATH=/app/utils/simple_clip/models/clip_model.pth
       - IMAGE_ENCODER=mobile_net_v3_small
       - TEXT_ENCODER=phobert-base
 

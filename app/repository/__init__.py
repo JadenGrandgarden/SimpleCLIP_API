@@ -1,0 +1,2 @@
+from app.repository.image_repository import ImageRepository
+from app.repository.text_repository import TextRepository
