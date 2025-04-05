@@ -4,17 +4,12 @@ import torchvision.transforms as transforms
 from transformers import AutoTokenizer
 from simple_clip.clip import CLIP
 from simple_clip.utils import get_image_encoder, get_text_encoder
+from app.core.config import configs
 
 # Define a class to hold our resources
-class Resources:
+class SimpleClipResources:
     def __init__(self):
-        self.model = None
-        self.tokenizer = None
-        self.device = None
-        self.transform = None
         self._initialized = False
-        
-    def initialize(self):
         """Initialize all resources"""
         if self._initialized:
             return
@@ -24,9 +19,9 @@ class Resources:
         print(f"Using device: {self.device}")
         
         # Get environment variables
-        model_path = os.environ.get("MODEL_PATH", "/app/simple_clip/models/clip_model.pth")
-        image_encoder_name = os.environ.get("IMAGE_ENCODER", "mobile_net_v3_small")
-        text_encoder_name = os.environ.get("TEXT_ENCODER", "phobert-base")
+        model_path = os.environ.get("MODEL_PATH", configs.MODEL_PATH)
+        image_encoder_name = os.environ.get("IMAGE_ENCODER", configs.IMAGE_ENCODER)
+        text_encoder_name = os.environ.get("TEXT_ENCODER", configs.TEXT_ENCODER)
         
         try:
             # Load encoders
@@ -82,15 +77,60 @@ class Resources:
         except Exception as e:
             print(f"Error initializing model: {str(e)}")
             raise e
+    
+    def encode_image(self, image: str):
+        """
+        Encode an image using the model.
+        """
+        # Apply transformations
+        image = self.transform(image).unsqueeze(0).to(self.device)
+        
+        # Extract image features
+        with torch.no_grad():
+            image_features = self.model.extract_image_features(image)
+            image_features = torch.nn.functional.normalize(image_features, p=2, dim=-1)
+        
+        return {
+            "vector": image_features[0].cpu().numpy().tolist(),
+            "dim": image_features.shape[1]  
+        } 
+    
+    def encode_text(self, text: str):
+        """
+        Encode text using the model.
+        """
+        # Tokenize and encode text
+        encoded_texts = self.tokenizer(
+            [text],
+            padding=True,
+            truncation=True,
+            max_length=100,
+            return_tensors='pt'
+        )
+        
+        # Move to device
+        input_ids = encoded_texts['input_ids'].to(self.device)
+        attention_mask = encoded_texts['attention_mask'].to(self.device)
+        
+        # Extract text features
+        with torch.no_grad():
+            text_features = self.model.extract_text_features(input_ids, attention_mask)
+            text_features = torch.nn.functional.normalize(text_features, p=2, dim=-1)
+        
+        return {
+            "vector": text_features[0].cpu().numpy().tolist(),
+            "dim": text_features.shape[1]  
+        }
+    
 
 # Create a singleton instance
-resources = Resources()
+resources = SimpleClipResources()
 
-# Export the initialize function and resources
-def initialize():
-    resources.initialize()
+# # Export the initialize function and resources
+# def initialize():
+#     resources.initialize()
 
-def get_resources():
-    if not resources._initialized:
-        resources.initialize()
-    return resources
+# def get_resources():
+#     if not resources._initialized:
+#         resources.initialize()
+#     return resources

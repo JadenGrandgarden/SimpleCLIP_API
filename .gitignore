@@ -53,6 +53,7 @@ venv.bak/
 data/
 checkpoints/
 models\clip_model.pth
+app/utils/simple_clip/models/clip_model.pth
 # Logs
 logs/
 *.log

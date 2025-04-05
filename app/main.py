@@ -1,33 +1,44 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from app.core.initialization import initialize
-from app.api.endpoints import vectorize, health, ui
-from app.api.api import api_router
+from starlette.middleware.cors import CORSMiddleware
+from app.core.config import configs
+from app.core.container import Container
+from app.utils.class_object import singleton
+from app.api.routes import api_router
 
-# Create FastAPI app
-app = FastAPI(title="SimpleCLIP API")
 
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+@singleton
+class AppCreator:
+    def __init__(self):
+        # set app default
+        self.app = FastAPI(
+            title=configs.PROJECT_NAME,
+            version="0.0.1"
+        )
 
-# Initialize on startup
-@app.on_event("startup")
-async def startup_event():
-    initialize()
+        # set db and container
+        self.container = Container()
+        self.db = self.container.db()
+        self.db.create_database()
 
-# Mount static files
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+        # set cors
+        if configs.BACKEND_CORS_ORIGINS:
+            self.app.add_middleware(
+                CORSMiddleware,
+                allow_origins=[str(origin) for origin in configs.BACKEND_CORS_ORIGINS],
+                allow_credentials=True,
+                allow_methods=["*"],
+                allow_headers=["*"],
+            )
 
-# Include routers
-app.include_router(api_router)
+        # set routes
+        @self.app.get("/")
+        def root():
+            return "service is working"
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8081, reload=True)
+        self.app.include_router(api_router)
+
+
+app_creator = AppCreator()
+app = app_creator.app
+db = app_creator.db
+container = app_creator.container
