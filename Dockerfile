@@ -21,7 +21,7 @@ COPY app /app/app/
 ENV PYTHONPATH=/app/app
 
 # Environment variables
-ENV MODEL_PATH=/app/models/clip_model.pth
+ENV MODEL_PATH=/app/utils/simple_clip/models/clip_model.pth
 ENV IMAGE_ENCODER=mobile_net_v3_small
 ENV TEXT_ENCODER=phobert-base
 ENV PORT=8081

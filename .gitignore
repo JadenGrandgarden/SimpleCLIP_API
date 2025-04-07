@@ -29,6 +29,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+simple_clip_api/
 
 # PyCharm
 .idea/

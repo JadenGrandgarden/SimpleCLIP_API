@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-from simple_clip.utils import get_feature_size
+from app.utils.simple_clip.utils import get_feature_size
 
 
 

@@ -2,11 +2,11 @@ from fastapi import APIRouter
 from app.schemas.schemas import HealthResponse
 
 router = APIRouter(
-    prefix="/health",
-    tags=["health"],
+    tags=["health"]
 )
 
 
 @router.get("/health", response_model=HealthResponse)
 async def health_check():
+    print("Health check endpoint called")
     return HealthResponse(status="ok")

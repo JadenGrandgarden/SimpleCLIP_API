@@ -22,7 +22,7 @@ router = APIRouter(
 def search_by_text(
     query: TextRequest,
     limit: int = Query(5, ge=1, le=100),
-    service: TextService = Depends(Provide[Container.search_service]),
+    service: TextService = Depends(Provide[Container.text_service]),
 ):
     """
     Search for images using a text query
@@ -42,7 +42,7 @@ def search_by_text(
 async def search_by_image(
     file: ImageRequest = File(...),
     limit: int = Query(5, ge=1, le=100),
-    service: ImageService = Depends(Provide[Container.search_service]),
+    service: ImageService = Depends(Provide[Container.image_service]),
 ):
     """
     Search for text using an image query

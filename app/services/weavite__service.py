@@ -31,6 +31,10 @@ class Repository(Protocol):
         """Update text data for an entity."""
         pass
     
+    def close_scoped_session(self) -> None:
+        """Close the scoped session."""
+        pass
+    
 class BaseService:
     """
     Base Service for Weaviate.
@@ -51,5 +55,8 @@ class BaseService:
     def delete_by_id(self, id: str) -> None:
         """Delete an entity by its ID."""
         self.repository.delete_by_id(id)
+    
+    def close_scoped_session(self):
+        self.repository.close_scoped_session()
         
     

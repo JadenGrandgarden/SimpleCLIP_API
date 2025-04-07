@@ -5,19 +5,25 @@ from PIL import Image
 from pathlib import Path
 from app.core.config import configs
 from app.repository.image_repository import ImageRepository
+from app.services.weavite__service import BaseService
 from app.utils.vectorize import resources
 from app.utils.save_image import save_image
 from typing import Dict, Any
 import base64
 import io
 
-class ImageService:
+class ImageService(BaseService):
     """Service for handling image operations in the repository."""
     
     def __init__(self, image_repository: ImageRepository) -> None:
         """Initialize the service with the image repository."""
         self.image_repository = image_repository
         super().__init__(image_repository)
+        
+    def read_all_image(self) -> List[Dict[str, Any]]:
+        """Read all image data from the repository."""
+        all_images = self.image_repository.read_all_image()
+        return all_images
     
     def upload_image(self, images: List[Image.Image], 
                     metadata: Optional[List[Dict[str, Any]]] = None) -> Dict[str, str]:
