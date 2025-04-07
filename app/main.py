@@ -4,6 +4,7 @@ from app.core.config import configs
 from app.core.container import Container
 from app.utils.class_object import singleton
 from app.api.routes import api_router
+from app.core.middleware import request_debug_middleware
 
 
 @singleton
@@ -14,11 +15,13 @@ class AppCreator:
             title=configs.PROJECT_NAME,
             version="0.0.1"
         )
+        
+        self.app.middleware("http")(request_debug_middleware)
 
         # set db and container
         self.container = Container()
         self.db = self.container.db()
-        self.db.create_database()
+        self.db.create_schema()
 
         # set cors
         if configs.BACKEND_CORS_ORIGINS:
@@ -34,6 +37,8 @@ class AppCreator:
         @self.app.get("/")
         def root():
             return "service is working"
+        
+        print("main.py: api_router created")
 
         self.app.include_router(api_router)
 

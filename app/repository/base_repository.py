@@ -1,4 +1,4 @@
-import weavite 
+import weaviate 
 from contextlib import AbstractContextManager
 from typing import Any, Callable, Dict, List, Optional, Protocol, TypeVar, Union
 from app.core.config import configs 
@@ -10,7 +10,7 @@ class BaseRepository(Protocol):
     Protocol for Base Repository.
     This defines the methods that any repository should implement.
     """
-    def __init__(self, session_factory: Callable[..., AbstractContextManager[weavite.Client]]) -> None:
+    def __init__(self, session_factory: Callable[..., AbstractContextManager[weaviate.Client]]) -> None:
         """Initialize the repository with a Weaviate client."""
         self.session_factory = session_factory
         
@@ -30,7 +30,7 @@ class BaseRepository(Protocol):
         """
 
         with self.session_factory() as client:
-            collection = client.collection(configs.WEAVIATE_COLLECTION_NAME)
+            collection = client.collections.get(configs.WEAVIATE_COLLECTION_NAME)
             with collection.batch.dynamic() as batch:
                 for item in tqdm(image_data, desc="Uploading images"):
                     properties = {
@@ -60,7 +60,7 @@ class BaseRepository(Protocol):
         """
         
         with self.session_factory() as client:
-            collection = client.collection(configs.WEAVIATE_COLLECTION_NAME)
+            collection = client.collections.get(configs.WEAVIATE_COLLECTION_NAME)
             with collection.batch.dynamic() as batch:
                 for item in tqdm(text_data, desc="Uploading texts"):
                     properties = {
@@ -68,15 +68,15 @@ class BaseRepository(Protocol):
                         "Type": "Text",
                         "metadata": item.get("metadata", {}),
                     }
-                    batch.add_data_object(
-                        data_object=properties,
+                    batch.add_object(
+                        properties=properties,
                         vector=item["vector"],
                         uuid=item.get("id", None),  # Optional UUID
                     )
     def read_by_id(self, id: str) -> Optional[Dict[str, Any]]:
         """Read an entity by its ID."""
         with self.session_factory() as client:
-            collection = client.collection(configs.WEAVIATE_COLLECTION_NAME)
+            collection = client.collections.get(configs.WEAVIATE_COLLECTION_NAME)
             entity = collection.query.get_by_id(id).do()
             if entity:
                 return entity[0]
@@ -84,15 +84,17 @@ class BaseRepository(Protocol):
         
     def read_all(self) -> List[Dict[str, Any]]:
         """Read all entities."""
+        entities = []
         with self.session_factory() as client:
-            collection = client.collection(configs.WEAVIATE_COLLECTION_NAME)
-            entities = collection.query.get_all().do()
+            collection = client.collections.get(configs.WEAVIATE_COLLECTION_NAME)
+            for item in collection.iterator():
+                entities.append(item.properties)
             return entities if entities else []
         
     def read_by_vector(self, search_vector: List[float], type_filter: str, limit: int = 5) -> List[Dict[str, Any]]:
         """Read entities by vector."""
         with self.session_factory() as client:
-            collection = client.collection(configs.WEAVIATE_COLLECTION_NAME)
+            collection = client.collections.get(configs.WEAVIATE_COLLECTION_NAME)
             entities = collection.near_vector(
             near_vector=search_vector,
             filters = Filter.by_property("type").equal(type_filter),
@@ -103,9 +105,13 @@ class BaseRepository(Protocol):
     def delete_by_id(self, id: str) -> None:
         """Delete an entity by its ID."""
         with self.session_factory() as client:
-            collection = client.collection(configs.WEAVIATE_COLLECTION_NAME)
+            collection = client.collections.get(configs.WEAVIATE_COLLECTION_NAME)
             collection.data.delete(id).do()
             print(f"Deleted entity with ID: {id}")
+            
+    def close_scoped_session(self):
+        with self.session_factory() as client:
+            return client.close() 
         
 
         

@@ -1,10 +1,10 @@
 from contextlib import contextmanager
 from typing import Any, Generator
-from config import configs
+from app.core.config import configs
 import weaviate
 
 class WeaviateDatabase:
-    def __init__(self, db_url: str) -> None:
+    def __init__(self) -> None:
         # Khởi tạo client kết nối đến Weaviate với URL được cung cấp
         self._client = weaviate.connect_to_local()
     
@@ -14,6 +14,9 @@ class WeaviateDatabase:
         Ví dụ, bạn có thể định nghĩa schema cho một entity như 'User'
         """
         # Lưu ý: Bạn nên kiểm tra nếu class đã tồn tại để tránh lỗi
+        if self._client.collections.exists(configs.WEAVIATE_COLLECTION_NAME):
+            print(f"Schema for {configs.WEAVIATE_COLLECTION_NAME} already exists")
+            return
         self._client.collections.create(configs.WEAVIATE_COLLECTION_NAME)
         print(f"Schema for {configs.WEAVIATE_COLLECTION_NAME} created")
     

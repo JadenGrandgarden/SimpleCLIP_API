@@ -1,2 +1,2 @@
-from simple_clip.encoders.image_encoders import ImageEncoder
-from simple_clip.encoders.text_encoders import TextEncoder
+from app.utils.simple_clip.encoders.image_encoders import ImageEncoder
+from app.utils.simple_clip.encoders.text_encoders import TextEncoder

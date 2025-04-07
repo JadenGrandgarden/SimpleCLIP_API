@@ -3,7 +3,7 @@ from transformers import AutoTokenizer
 # import datasets
 # import webdataset as wds
 
-from simple_clip.encoders import ImageEncoder, TextEncoder
+from app.utils.simple_clip.encoders import ImageEncoder, TextEncoder
 # from simple_clip.custom_datasets.clip_datasets import KTVICDataset
 
 

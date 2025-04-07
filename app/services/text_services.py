@@ -5,18 +5,20 @@ from PIL import Image
 from pathlib import Path
 from app.core.config import configs
 from app.repository.text_repository import TextRepository
+from app.services.weavite__service import BaseService
 from app.utils.vectorize import resources
 from app.utils.save_image import save_image
 from typing import Dict, Any
 import base64
 import io
 
-class TextService:
+class TextService(BaseService):
     """Service for handling text operations in the repository."""
     
     def __init__(self, text_repository: TextRepository) -> None:
         """Initialize the service with the text repository."""
         self.text_repository = text_repository
+        super().__init__(text_repository)
     
     def upload_text(self, texts: List[str], metadata: Optional[List[Dict[str, Any]]] = None) -> Dict[str, str]:
         """

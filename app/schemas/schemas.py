@@ -5,8 +5,7 @@ from fastapi import UploadFile
 class TextRequest(BaseModel):
     text: str
 
-class ImageRequest(BaseModel):
-    image: List[UploadFile]  # Base64 encoded image
+ImageRequest = UploadFile  # Base64 encoded image
     
 class TextSearchResponse(BaseModel):
     text: List[str] 

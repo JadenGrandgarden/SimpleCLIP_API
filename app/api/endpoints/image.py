@@ -26,7 +26,7 @@ def read_all_images(
     Returns:
         List of images
     """
-    return image.read_all()
+    return image.read_all_image()
 
 
 @router.get("/{image_id}")
