@@ -4,7 +4,7 @@ from app.core.config import configs
 from app.core.container import Container
 from app.utils.class_object import singleton
 from app.api.routes import api_router
-from app.core.middleware import request_debug_middleware
+# from app.core.middleware import request_debug_middleware
 
 
 @singleton
@@ -16,7 +16,7 @@ class AppCreator:
             version="0.0.1"
         )
         
-        self.app.middleware("http")(request_debug_middleware)
+        # self.app.middleware("http")(request_debug_middleware)
 
         # set db and container
         self.container = Container()

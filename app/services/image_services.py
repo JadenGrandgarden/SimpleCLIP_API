@@ -38,22 +38,15 @@ class ImageService(BaseService):
         """
         # Save images to local storage
         image_paths = save_image(images, metadata)
-        # Turn images into base64 strings
-        image_base64_list = []
-        for image in images:
-            buffer = io.BytesIO()
-            image.save(buffer, format="JPEG")
-            image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-            image_base64_list.append(image_base64)
-        images = image_base64_list
+        
         if metadata is None:
             metadata = [{} for _ in images]
-        
+            
         if len(images) != len(image_paths) or len(images) != len(metadata):
             raise ValueError("Length of images, image_paths, and metadata must match")
         
-        # Process and prepare image data
         image_data = []
+        
         for i, image in enumerate(images):
             # Get image vector embedding
             embedding = resources.encode_image(image)
@@ -72,9 +65,7 @@ class ImageService(BaseService):
             }
             image_data.append(image_item)
         
-        # Upload to repository
         self.image_repository.update_image_data(image_data)
-        
         return {"message": f"Successfully uploaded {len(images)} image items"}
     
     def search_by_image(self, image: Image.Image, limit: int = 5) -> List[Dict[str, Any]]:

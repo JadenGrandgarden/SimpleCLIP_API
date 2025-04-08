@@ -39,8 +39,8 @@ class BaseRepository(Protocol):
                         "Type": "Image",
                         "metadata": item.get("metadata", {}),
                     }
-                    batch.add_data_object(
-                        data_object=properties,
+                    batch.add_object(
+                        properties=properties,
                         vector=item["vector"],
                         uuid=item.get("id", None),  # Optional UUID
                     )

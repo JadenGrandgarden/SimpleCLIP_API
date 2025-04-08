@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import Request
 import time
 import json
@@ -12,22 +13,34 @@ from app.services.weavite__service import BaseService
 def inject(func):
     @di_inject
     @wraps(func)
-    def wrapper(*args, **kwargs):
-        print(f"Injecting dependencies into {func.__name__}")
-        result = func(*args, **kwargs)
+    async def async_wrapper(*args, **kwargs):
+        print(f"Injecting dependencies into {func.__name__} (async)")
+        result = await func(*args, **kwargs)
         injected_services = [arg for arg in kwargs.values() if isinstance(arg, BaseService)]
-        if len(injected_services) == 0:
-            return result
-        else:
+        if len(injected_services) > 0:
             try:
                 injected_services[-1].close_scoped_session()
             except Exception as e:
                 logger.error(e)
-
         return result
 
-    return wrapper
+    @di_inject
+    @wraps(func)
+    def sync_wrapper(*args, **kwargs):
+        print(f"Injecting dependencies into {func.__name__} (sync)")
+        result = func(*args, **kwargs)
+        injected_services = [arg for arg in kwargs.values() if isinstance(arg, BaseService)]
+        if len(injected_services) > 0:
+            try:
+                injected_services[-1].close_scoped_session()
+            except Exception as e:
+                logger.error(e)
+        return result
 
+    if asyncio.iscoroutinefunction(func):
+        return async_wrapper
+    else:
+        return sync_wrapper
 
 async def request_debug_middleware(request: Request, call_next):
     """Middleware to log request details"""
@@ -45,6 +58,21 @@ async def request_debug_middleware(request: Request, call_next):
                         print(f"File field '{key}': filename={form[key].filename}")
                     else:
                         print(f"Form field '{key}': {form[key]}")
+            else: 
+                body = await request.json()
+                print(f"Request body: {json.dumps(body, indent=2)}")
+        except json.JSONDecodeError:
+            print("Request body is not valid JSON")
+        except TypeError:
+            print("Request body is not JSON serializable")
+        except AttributeError:
+            print("Request body is not JSON serializable")
+        except KeyError:
+            print("Request body is not JSON serializable")
+        except ValueError:
+            print("Request body is not JSON serializable")
+        except UnicodeDecodeError:
+            print("Request body is not JSON serializable")
         except Exception as e:
             print(f"Error parsing request body: {str(e)}")
     

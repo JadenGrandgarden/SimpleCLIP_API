@@ -15,14 +15,14 @@ class Configs(BaseSettings):
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = ["*"]
     # Image path 
-    IMAGE_PATH: str = "/app/asset/"
+    IMAGE_SAVE_DIR: str = "./app/asset/"
     # date 
     DATETIME_FORMAT: str = "%Y-%m-%d %H:%M:%S"
     DATE_FORMAT: str = "%Y-%m-%d"
     # UUID code 
     UUID_CODE: str = "00000000-0000-0000-0000-000000000000"
     # Model path
-    MODEL_PATH: str = "/app/utils/simple_clip/models"
+    MODEL_PATH: str = "./app/utils/simple_clip/models/simple_clip.pth"
     # Image encoder name
     IMAGE_ENCODER: str = "mobile_net_v3_small"
     # Text encoder name
