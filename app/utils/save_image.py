@@ -7,7 +7,7 @@ from typing import List, Optional, Dict, Any
 from app.core.config import configs
 
 def save_image(images: List[Image.Image], 
-               metadata: Optional[List[Dict[str, Any]]] = None) -> Dict[str, str]:
+               metadata: Optional[List[Dict[str, Any]]] = None) -> List[str]:
     """
     Save image data to the local file system.
     
@@ -18,6 +18,8 @@ def save_image(images: List[Image.Image],
     Returns:
         Dictionary with upload status message
     """
+    
+    print("Saving images...")
     if metadata is None:
         metadata = [{} for _ in images]
     
@@ -30,6 +32,7 @@ def save_image(images: List[Image.Image],
     # Process and save images
     saved_images = []
     for i, image in enumerate(images):
+        print(f"Processing image {i+1}/{len(images)}")
         # Generate a unique filename based on current timestamp and index
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"{timestamp}_{i}.png"

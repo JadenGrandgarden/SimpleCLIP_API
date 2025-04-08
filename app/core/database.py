@@ -34,4 +34,5 @@ class WeaviateDatabase:
             raise e
         finally:
             # Không cần đóng kết nối vì weaviate-client sử dụng HTTP, nên không có thao tác clean-up đặc biệt
-            self._client.close()
+            # self._client.close()
+            pass

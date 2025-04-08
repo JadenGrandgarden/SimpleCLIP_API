@@ -40,7 +40,7 @@ simple_clip_api/
 # VS Code
 .vscode/
 *.code-workspace
-
+app/asset/*.png
 # Jupyter Notebook
 .ipynb_checkpoints
 
