@@ -11,6 +11,7 @@ from app.utils.save_image import save_image
 from typing import Dict, Any
 import base64
 import io
+from datetime import datetime
 
 class ImageService(BaseService):
     """Service for handling image operations in the repository."""
@@ -25,7 +26,7 @@ class ImageService(BaseService):
         all_images = self.image_repository.read_all_image()
         return all_images
     
-    def upload_image(self, images: List[Image.Image], 
+    def upload_image(self, images: List[Image.Image], images_filename: List[str],
                     metadata: Optional[List[Dict[str, Any]]] = None) -> Dict[str, str]:
         """
         Upload image data to the vector database.
@@ -37,10 +38,13 @@ class ImageService(BaseService):
             Dictionary with upload status message
         """
         # Save images to local storage
-        image_paths = save_image(images, metadata)
+        image_paths = save_image(images, images_filename, metadata)
         
         if metadata is None:
             metadata = [{} for _ in images]
+        for item in metadata:
+            # Add created_at timestamp to each metadata item
+            item['created_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             
         if len(images) != len(image_paths) or len(images) != len(metadata):
             raise ValueError("Length of images, image_paths, and metadata must match")
@@ -50,16 +54,9 @@ class ImageService(BaseService):
         for i, image in enumerate(images):
             # Get image vector embedding
             embedding = resources.encode_image(image)
-            
-            # Convert image to base64 for storage (optional)
-            buffer = io.BytesIO()
-            image.save(buffer, format="JPEG")
-            image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-            
             # Create image data entry
             image_item = {
                 "image_path": image_paths[i],
-                "image_base64": image_base64,
                 "vector": embedding["vector"],
                 "metadata": metadata[i]
             }

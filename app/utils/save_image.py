@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import List, Optional, Dict, Any
 from app.core.config import configs
 
-def save_image(images: List[Image.Image], 
+def save_image(images: List[Image.Image], images_filename: List[str],
                metadata: Optional[List[Dict[str, Any]]] = None) -> List[str]:
     """
     Save image data to the local file system.
@@ -34,8 +34,7 @@ def save_image(images: List[Image.Image],
     for i, image in enumerate(images):
         print(f"Processing image {i+1}/{len(images)}")
         # Generate a unique filename based on current timestamp and index
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"{timestamp}_{i}.png"
+        filename = images_filename[i]
         
         # Save the image to the specified directory
         image_path = os.path.join(configs.IMAGE_SAVE_DIR, filename)

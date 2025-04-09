@@ -11,6 +11,7 @@ from app.services.image_services import ImageService
 from app.services.text_services import TextService
 from fastapi import HTTPException
 
+
 router = APIRouter(
     prefix="/upload",
     tags=["upload"],
@@ -49,11 +50,12 @@ async def upload_image(
         metadata = json.loads(metadata_json) if metadata_json else None
         img = Image.open(io.BytesIO(content)).convert('RGB')
         images = [img]  # Create a list with the single image
+        images_filename = [file.filename]
         
         print(f"Processed image: {file.filename}, size: {img.size}")
         
         # Call service with single image in a list
-        response = service.upload_image(images, metadata)
+        response = service.upload_image(images,images_filename, metadata)
         if not isinstance(response, dict):
             return {"message": "Image uploaded successfully"}
         return response
