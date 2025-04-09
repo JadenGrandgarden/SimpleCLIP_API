@@ -1,16 +1,10 @@
-import os
-import logging
 from typing import List, Optional
-from PIL import Image
 from pathlib import Path
-from app.core.config import configs
 from app.repository.text_repository import TextRepository
 from app.services.weavite__service import BaseService
 from app.utils.vectorize import resources
-from app.utils.save_image import save_image
 from typing import Dict, Any
-import base64
-import io
+from datetime import datetime
 
 class TextService(BaseService):
     """Service for handling text operations in the repository."""
@@ -34,6 +28,10 @@ class TextService(BaseService):
         if metadata is None:
             metadata = [{} for _ in texts]
         
+        for item in metadata:
+            # Add created_at timestamp to each metadata item
+            item['created_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
         if len(texts) != len(metadata):
             raise ValueError("Length of texts and metadata must match")
         
@@ -56,23 +54,29 @@ class TextService(BaseService):
         
         return {"message": f"Successfully uploaded {len(texts)} text items"}
     
+
     def search_by_text(self, text: str, limit: int = 5):
         """
         Search for images using text query.
-        
-        Args:
-            text: The text query to search with
-            limit: Maximum number of results to return
-            
-        Returns:
-            List of search results
         """
         # Get text vector embedding
         text_vector = resources.encode_text(text)["vector"]
         
-        # Search in image repository using the text vector
-        return self.text_repository.read_by_vector(
+        # Get raw results from repository
+        raw_results = self.text_repository.read_by_vector(
             search_vector=text_vector,
             type_filter="Image",
             limit=limit
         )
+        
+        image_paths = []
+        for result in raw_results.objects:
+            if result.properties.get("image_path"):
+                image_path = Path(result.properties["image_path"])
+                if image_path.exists():
+                    image_paths.append(str(image_path))
+                else:
+                    print(f"Warning: Image file not found: {image_path}")
+
+        return image_paths
+            

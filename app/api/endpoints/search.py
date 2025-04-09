@@ -4,8 +4,8 @@ from typing import List, Optional
 import io
 from PIL import Image
 import base64
-from app.schemas.schemas import ImageSearchResponse, TextSearchResponse, ImageRequest, TextRequest
-
+from app.schemas.schemas import TextSearchResponse, ImageRequest, TextRequest
+from fastapi.responses import FileResponse
 from app.core.container import Container
 from app.core.middleware import inject
 from app.services.image_services import ImageService
@@ -17,7 +17,7 @@ router = APIRouter(
 )
 
 
-@router.get("/text", response_model=TextSearchResponse)
+@router.get("/text")
 @inject
 def search_by_text(
     query: TextRequest,
@@ -34,10 +34,18 @@ def search_by_text(
     Returns:
         List of matching image results
     """
-    return service.search_by_text(text=query, limit=limit)
+    image_paths = service.search_by_text(text=query, limit=limit)
+    
+    # Create FileResponse objects here if you need to return the actual files
+    response_files = []
+    for path in image_paths:
+        response_files.append(FileResponse(path, media_type="image/jpeg"))
+    print(response_files)
+    # Otherwise return list of paths that can be requested individually
+    return {"response_files": response_files}
 
 
-@router.post("/image", response_model=ImageSearchResponse)
+@router.post("/image", response_model=TextSearchResponse)
 @inject
 async def search_by_image(
     file: ImageRequest = File(...),
@@ -57,4 +65,11 @@ async def search_by_image(
     content = await file.read()
     image = Image.open(io.BytesIO(content)).convert('RGB')
     
-    return service.search_by_image(image=image, limit=limit)
+    results = service.search_by_image(image=image, limit=limit)
+    
+    
+    text_results = []
+    for obj in results.objects:
+        if obj.properties.get("text"):
+            text_results.append(obj.properties["text"])
+    return TextSearchResponse(text=text_results)

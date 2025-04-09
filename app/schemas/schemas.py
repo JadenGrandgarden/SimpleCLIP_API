@@ -2,16 +2,13 @@ from pydantic import BaseModel
 from typing import List, Optional
 from fastapi import UploadFile
 
-class TextRequest(BaseModel):
-    text: str
+TextRequest = str
 
 ImageRequest = UploadFile  # Base64 encoded image
     
 class TextSearchResponse(BaseModel):
     text: List[str] 
 
-class ImageSearchResponse(BaseModel):
-    image: List[str]  # List of image URLs or identifiers 
     
 class UploadResponse(BaseModel):
     message: str

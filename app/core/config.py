@@ -22,7 +22,7 @@ class Configs(BaseSettings):
     # UUID code 
     UUID_CODE: str = "00000000-0000-0000-0000-000000000000"
     # Model path
-    MODEL_PATH: str = "./app/utils/simple_clip/models/simple_clip.pth"
+    MODEL_PATH: str = "C:/Users/Admin/Capstone/SimpleCLIP/app/utils/simple_clip/models/clip_model.pth"
     # Image encoder name
     IMAGE_ENCODER: str = "mobile_net_v3_small"
     # Text encoder name

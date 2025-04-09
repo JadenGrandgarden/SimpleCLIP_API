@@ -28,6 +28,9 @@ class WeaviateDatabase:
         nên chúng ta chỉ trả về client để thực hiện các thao tác CRUD.
         """
         try:
+            if hasattr(self._client, 'is_connected') and not self._client.is_connected():
+                print("Connecting to Weaviate...")
+                self._client.connect()
             yield self._client
         except Exception as e:
             # Không có rollback cho Weaviate vì các thao tác đều được gửi qua HTTP

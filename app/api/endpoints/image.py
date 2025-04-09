@@ -12,7 +12,7 @@ router = APIRouter(
 )
 
 
-@router.get("/")
+@router.get("/all")
 @inject
 def read_all_images(
     image: ImageService = Depends(Provide[Container.image_service]),
