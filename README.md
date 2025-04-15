@@ -25,6 +25,14 @@ To install SimpleCLIP, follow these steps:
     ```bash
     pip install -r requirements.txt
     ```
+4. Run weaviate vector database:
+    ```bash
+    docker conmpose up -build
+    ```
+5. Run the app:
+    ```bash
+    uvicorn app.main:app --host 127.0.0.1 --port 8081
+    ```
 
 ## Usage
 
