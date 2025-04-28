@@ -3,7 +3,7 @@ import logging
 from typing import List, Optional
 from PIL import Image
 from pathlib import Path
-from app.core.config import configs
+from app.core.config import configs as CFG
 from app.repository.image_repository import ImageRepository
 from app.services.weavite__service import BaseService
 from app.utils.vectorize import resources
@@ -12,6 +12,9 @@ from typing import Dict, Any
 import base64
 import io
 from datetime import datetime
+import tempfile
+import os
+import logging
 
 class ImageService(BaseService):
     """Service for handling image operations in the repository."""
@@ -51,9 +54,10 @@ class ImageService(BaseService):
         
         image_data = []
         
-        for i, image in enumerate(images):
+        for i, image_path in enumerate(image_paths):
             # Get image vector embedding
-            embedding = resources.encode_image(image)
+            embedding = resources.encode_image(image_path)
+
             # Create image data entry
             image_item = {
                 "image_path": image_paths[i],

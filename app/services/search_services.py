@@ -27,6 +27,7 @@ class SearchService:
         """
         # Get text vector embedding
         text_vector = resources.encode_text(text)["vector"]
+        print(f"Text vector: {text_vector}")
         
         # Search in image repository using the text vector
         return self.image_repository.read_by_vector(

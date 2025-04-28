@@ -27,7 +27,7 @@ To install SimpleCLIP, follow these steps:
     ```
 4. Run weaviate vector database:
     ```bash
-    docker conmpose up -build
+    docker conmpose up --build
     ```
 5. Run the app:
     ```bash

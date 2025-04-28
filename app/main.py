@@ -4,6 +4,7 @@ from app.core.config import configs
 from app.core.container import Container
 from app.utils.class_object import singleton
 from app.api.routes import api_router
+from app.core.config import configs
 # from app.core.middleware import request_debug_middleware
 
 

@@ -73,3 +73,4 @@ async def search_by_image(
         if obj.properties.get("text"):
             text_results.append(obj.properties["text"])
     return TextSearchResponse(text=text_results)
+
