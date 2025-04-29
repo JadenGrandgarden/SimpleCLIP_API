@@ -1,10 +1,10 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
 from app.core.config import configs
 from app.core.container import Container
 from app.utils.class_object import singleton
 from app.api.routes import api_router
-from app.core.config import configs
 # from app.core.middleware import request_debug_middleware
 
 
@@ -12,12 +12,13 @@ from app.core.config import configs
 class AppCreator:
     def __init__(self):
         # set app default
-        self.app = FastAPI(
-            title=configs.PROJECT_NAME,
-            version="0.0.1"
-        )
-        
+        self.app = FastAPI(title=configs.PROJECT_NAME, version="0.0.1")
+
         # self.app.middleware("http")(request_debug_middleware)
+        # Mount static files
+        self.app.mount(
+            "/asset", StaticFiles(directory=configs.IMAGE_SAVE_DIR), name="assets"
+        )
 
         # set db and container
         self.container = Container()
@@ -30,15 +31,22 @@ class AppCreator:
                 CORSMiddleware,
                 allow_origins=[str(origin) for origin in configs.BACKEND_CORS_ORIGINS],
                 allow_credentials=True,
-                allow_methods=["*"],
-                allow_headers=["*"],
+                allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+                allow_headers=[
+                    "Content-Type",
+                    "Authorization",
+                    "X-Requested-With",
+                    "Accept",
+                ],
+                expose_headers=["Content-Length", "Content-Range"],
+                max_age=600,  # Cache preflight requests for 10 minutes
             )
 
         # set routes
         @self.app.get("/")
         def root():
             return "service is working"
-        
+
         print("main.py: api_router created")
 
         self.app.include_router(api_router)

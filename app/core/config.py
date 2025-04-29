@@ -1,31 +1,40 @@
 import os
 from typing import List
 from torch import cuda
+
 # from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
+
 
 class Configs(BaseSettings):
     """
     Configuration settings for the application.
     """
+
     # base
     # ENV: str = os.getenv("ENV", "dev")
     API: str = "/api"
     PROJECT_NAME: str = "Simple CLIP"
     # CORS
-    BACKEND_CORS_ORIGINS: List[str] = ["*"]
+    BACKEND_CORS_ORIGINS: List[str] = [
+        "http://localhost:8081",
+        "http://127.0.0.1:8081",
+        # Remove wildcard since we're using credentials
+    ]
     # Device
     DEVICE: str = "cuda" if cuda.is_available() else "cpu"
-    # Image path 
+    # Image path
     IMAGE_SAVE_DIR: str = "./app/asset/"
-    # date 
+    # date
     DATETIME_FORMAT: str = "%Y-%m-%d %H:%M:%S"
     DATE_FORMAT: str = "%Y-%m-%d"
-    # UUID code 
+    # UUID code
     UUID_CODE: str = "00000000-0000-0000-0000-000000000000"
     # Model path
-    MODEL_PATH: str = "C:/Users/Admin/Capstone/SimpleCLIP/app/utils/simple_clip/models/clip_model.pth"
-    # Temperature 
+    MODEL_PATH: str = (
+        "C:/Users/Admin/Capstone/SimpleCLIP/app/utils/simple_clip/models/clip_model.pth"
+    )
+    # Temperature
     TEMPERATURE: float = 1.0
     # Image encoder name
     IMAGE_ENCODER: str = "mobilenetv3_large_150d.ra4_e3600_r256_in1k"
@@ -43,12 +52,12 @@ class Configs(BaseSettings):
     PROJECTION_DIM: int = 256
     # Number of projection layers
     NUM_PROJECTION_LAYERS: int = 1
-    # Weavite URL 
+    # Weavite URL
     WEAVIATE_URL: str = "http://localhost:8080"
     # Weaviate class name
     WEAVIATE_COLLECTION_NAME: str = "MultimodalData"
+    # Temporary directory
+    TEMP_DIR: str = "./temp/"
+
 
 configs = Configs()
-
-    
-    

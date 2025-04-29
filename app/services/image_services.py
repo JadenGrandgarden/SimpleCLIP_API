@@ -1,6 +1,7 @@
 import os
 import logging
 from typing import List, Optional
+
 from PIL import Image
 from pathlib import Path
 from app.core.config import configs as CFG
@@ -69,7 +70,7 @@ class ImageService(BaseService):
         self.image_repository.update_image_data(image_data)
         return {"message": f"Successfully uploaded {len(images)} image items"}
     
-    def search_by_image(self, image: Image.Image, limit: int = 5) -> List[Dict[str, Any]]:
+    def search_by_image(self, image_filename: str, limit: int = 5) -> List[Dict[str, Any]]:
         """
         Search for text using image query.
         
@@ -81,7 +82,8 @@ class ImageService(BaseService):
             List of search results
         """
         # Get image vector embedding
-        image_vector = resources.encode_image(image)["vector"]
+        image_vector = resources.encode_image(image_filename)["vector"]
+       
         
         # Search in text repository using the image vector
         return self.image_repository.read_by_vector(

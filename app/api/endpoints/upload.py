@@ -42,9 +42,10 @@ async def upload_image(
 ):
     """Upload image files to the vector database"""
     
-    try:
-        
+    try:     
         # Process single uploaded image
+        print(f"Received metadata_json: {metadata_json}")
+        print(f"Received file: {file.filename}")
         content = await file.read()
         # Parse metadata
         metadata = json.loads(metadata_json) if metadata_json else None
@@ -55,7 +56,7 @@ async def upload_image(
         print(f"Processed image: {file.filename}, size: {img.size}")
         
         # Call service with single image in a list
-        response = service.upload_image(images,images_filename, metadata)
+        response = service.upload_image(images, images_filename, metadata)
         if not isinstance(response, dict):
             return {"message": "Image uploaded successfully"}
         return response
