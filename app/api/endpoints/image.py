@@ -68,8 +68,8 @@ def delete_image_by_id(
         Confirmation message
     """
     # Check if image exists first
-    image = image.read_by_id(image_id)
-    if image is None:
+    img = image.read_by_id(image_id)
+    if img is None:
         raise HTTPException(status_code=404, detail="Image not found")
     
     # Delete the image

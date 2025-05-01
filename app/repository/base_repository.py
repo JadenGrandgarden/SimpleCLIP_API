@@ -176,7 +176,7 @@ class BaseRepository(Protocol):
         """Delete an entity by its ID."""
         with self.session_factory() as client:
             collection = client.collections.get(configs.WEAVIATE_COLLECTION_NAME)
-            collection.data.delete(id)
+            collection.data.delete_by_id(id)
             print(f"Deleted entity with ID: {id}")
             
     def close_scoped_session(self) -> None:
