@@ -50,6 +50,15 @@ class AppCreator:
         print("main.py: api_router created")
 
         self.app.include_router(api_router)
+        
+        # Add shutdown event handler to close the database connection
+        @self.app.on_event("shutdown")
+        def shutdown_event():
+            print("Shutting down the app...")
+            if self.db:
+                self.db.close()
+                print("Database connection closed.")
+
 
 
 app_creator = AppCreator()

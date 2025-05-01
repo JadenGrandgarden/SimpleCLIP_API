@@ -26,6 +26,7 @@ def read_all_images(
     Returns:
         List of images
     """
+    print("Fetching all images")
     return image.read_all_image()
 
 
@@ -44,6 +45,7 @@ def read_image_by_id(
     Returns:
         Image data if found
     """
+    print(f"Fetching image with ID: {image_id}")
     image = image.read_by_id(image_id)
     if image is None:
         raise HTTPException(status_code=404, detail="Image not found")

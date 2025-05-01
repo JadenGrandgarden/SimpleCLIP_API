@@ -15,27 +15,31 @@ def inject(func):
     @wraps(func)
     async def async_wrapper(*args, **kwargs):
         print(f"Injecting dependencies into {func.__name__} (async)")
-        result = await func(*args, **kwargs)
-        injected_services = [arg for arg in kwargs.values() if isinstance(arg, BaseService)]
-        if len(injected_services) > 0:
-            try:
-                injected_services[-1].close_scoped_session()
-            except Exception as e:
-                logger.error(e)
-        return result
+        try:
+            result = await func(*args, **kwargs)
+            return result
+        finally:
+            injected_services = [arg for arg in kwargs.values() if isinstance(arg, BaseService)]
+            for service in injected_services:
+                try:
+                    service.close_scoped_session()
+                except Exception as e:
+                    logger.error(e)
 
     @di_inject
     @wraps(func)
     def sync_wrapper(*args, **kwargs):
         print(f"Injecting dependencies into {func.__name__} (sync)")
-        result = func(*args, **kwargs)
-        injected_services = [arg for arg in kwargs.values() if isinstance(arg, BaseService)]
-        if len(injected_services) > 0:
-            try:
-                injected_services[-1].close_scoped_session()
-            except Exception as e:
-                logger.error(e)
-        return result
+        try:
+            result = func(*args, **kwargs)
+            return result
+        finally:
+            injected_services = [arg for arg in kwargs.values() if isinstance(arg, BaseService)]
+            for service in injected_services:
+                try:
+                    service.close_scoped_session()
+                except Exception as e:
+                    logger.error(e)
 
     if asyncio.iscoroutinefunction(func):
         return async_wrapper
