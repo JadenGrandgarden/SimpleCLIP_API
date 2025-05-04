@@ -5,6 +5,8 @@ from torch import cuda
 # from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 
+import py_vncorenlp
+py_vncorenlp.download_model(save_dir='C:/Users/Admin/Capstone/SimpleCLIP/vncorenlp')
 
 class Configs(BaseSettings):
     """
@@ -12,6 +14,7 @@ class Configs(BaseSettings):
     """
 
     # base
+    rdrsegmenter = py_vncorenlp.VnCoreNLP(annotators=["wseg"], save_dir='C:/Users/Admin/Capstone/SimpleCLIP/vncorenlp')
     # ENV: str = os.getenv("ENV", "dev")
     API: str = "/api"
     PROJECT_NAME: str = "Simple CLIP"
@@ -33,7 +36,7 @@ class Configs(BaseSettings):
     UUID_CODE: str = "00000000-0000-0000-0000-000000000000"
     # Model path
     MODEL_PATH: str = (
-        "C:/Users/Admin/Capstone/SimpleCLIP/app/utils/simple_clip/models/clip_model.pth"
+        "C:/Users/Admin/Capstone/SimpleCLIP/app/utils/simple_clip/models/clip_model.pt"
     )
     # Temperature
     TEMPERATURE: float = 1.0

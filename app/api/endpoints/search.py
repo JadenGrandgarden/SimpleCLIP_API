@@ -12,6 +12,7 @@ from app.core.middleware import inject
 from app.services.image_services import ImageService
 from app.services.text_services import TextService
 from app.core.config import configs as CFG
+import py_vncorenlp
 
 router = APIRouter(
     prefix="/search",
@@ -23,7 +24,7 @@ router = APIRouter(
 @inject
 def search_by_text(
     query: TextRequest,
-    limit: int = Query(5, ge=1, le=100),
+    limit: int = Query(10, ge=10, le=100),
     service: TextService = Depends(Provide[Container.text_service]),
 ):
     """
@@ -36,7 +37,15 @@ def search_by_text(
     Returns:
         List of matching image results
     """
+    # Preprocess the query text
+    query = query.text.strip().lower()
+    query = CFG.rdrsegmenter.tokenize(query)[0]
+    
+    print(f"Searching for: {query}")
+    # limit = 2
     image_paths = service.search_by_text(text=query, limit=limit)
+    # print(f"Found {image_paths} image")
+    
     
     # Create FileResponse objects here if you need to return the actual files
     image_urls = []

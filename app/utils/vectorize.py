@@ -93,12 +93,12 @@ class SimpleClipResources:
         # Extract image features
         with torch.no_grad():
             image_features = self.model.image_encoder(image.unsqueeze(0).to(self.device))
-            image_features = self.model.image_projection(image_features)
-            image_features = torch.nn.functional.normalize(image_features, p=2, dim=-1)
+            image_embeddings = self.model.image_projection(image_features)
+            # image_features = torch.nn.functional.normalize(image_features, p=2, dim=-1)
         
         return {
-            "vector": image_features[0].cpu().numpy().tolist(),
-            "dim": image_features.shape[1]  
+            "vector": image_embeddings[0].cpu().numpy().tolist(),
+            "dim": image_embeddings.shape[1]  
         } 
     
     def encode_text(self, text: str):
@@ -108,28 +108,32 @@ class SimpleClipResources:
         # Tokenize and encode text
         encoded_texts = self.tokenizer(
             [text],
-            padding=True,
-            truncation=True,
-            max_length=100,
-            return_tensors='pt'
+            # padding=True,
+            # truncation=True,
+            # max_length=200
+            # return_tensors='pt'
         )
         
         # Move to device
-        input_ids = encoded_texts['input_ids'].to(self.device)
-        attention_mask = encoded_texts['attention_mask'].to(self.device)
+        batch = {
+            key: torch.tensor(val).to(self.device) for key, val in encoded_texts.items()
+        }
+        
+        # input_ids = encoded_texts['input_ids'].to(self.device)
+        # attention_mask = encoded_texts['attention_mask'].to(self.device)
         
         # Extract text features
         with torch.no_grad():
             text_features = self.model.text_encoder(
-                input_ids=input_ids,
-                attention_mask=attention_mask
+                input_ids=batch['input_ids'],
+                attention_mask=batch['attention_mask']
             )
-            text_features = self.model.text_projection(text_features)
-            text_features = torch.nn.functional.normalize(text_features, p=2, dim=-1)
+            text_embeddings = self.model.text_projection(text_features)
+            # text_features = torch.nn.functional.normalize(text_features, p=2, dim=-1)
         
         return {
-            "vector": text_features[0].cpu().numpy().tolist(),
-            "dim": text_features.shape[1]  
+            "vector": text_embeddings[0].cpu().numpy().tolist(),
+            "dim": text_embeddings.shape[1]  
         }
 
 # Create a singleton instance

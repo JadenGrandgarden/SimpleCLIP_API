@@ -161,7 +161,7 @@ class BaseRepository(Protocol):
             return entities if entities else []
         return self._execute_with_retry(operation)
         
-    def read_by_vector(self, search_vector: List[float], type_filter: str, limit: int = 5) -> List[Dict[str, Any]]:
+    def read_by_vector(self, search_vector: List[float], type_filter: str, limit: int = 10) -> List[Dict[str, Any]]:
         """Read entities by vector."""
         with self.session_factory() as client:
             collection = client.collections.get(configs.WEAVIATE_COLLECTION_NAME)

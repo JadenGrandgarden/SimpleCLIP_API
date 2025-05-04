@@ -55,7 +55,7 @@ class TextService(BaseService):
         return {"message": f"Successfully uploaded {len(texts)} text items"}
     
 
-    def search_by_text(self, text: str, limit: int = 5):
+    def search_by_text(self, text: str, limit: int = 10):
         """
         Search for images using text query.
         """
