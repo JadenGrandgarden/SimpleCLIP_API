@@ -5,8 +5,8 @@ from torch import cuda
 # from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 
-import py_vncorenlp
-py_vncorenlp.download_model(save_dir='C:/Users/Admin/Capstone/SimpleCLIP/vncorenlp')
+# import py_vncorenlp
+# py_vncorenlp.download_model(save_dir='C:/Users/Admin/Capstone/SimpleCLIP/vncorenlp')
 
 class Configs(BaseSettings):
     """
@@ -14,7 +14,7 @@ class Configs(BaseSettings):
     """
 
     # base
-    rdrsegmenter = py_vncorenlp.VnCoreNLP(annotators=["wseg"], save_dir='C:/Users/Admin/Capstone/SimpleCLIP/vncorenlp')
+    # rdrsegmenter = py_vncorenlp.VnCoreNLP(annotators=["wseg"], save_dir='C:/Users/Admin/Capstone/SimpleCLIP/vncorenlp')
     # ENV: str = os.getenv("ENV", "dev")
     API: str = "/api"
     PROJECT_NAME: str = "Simple CLIP"
@@ -62,6 +62,8 @@ class Configs(BaseSettings):
     WEAVIATE_COLLECTION_NAME: str = "MultimodalData"
     # Temporary directory
     TEMP_DIR: str = "./temp/"
+    # AUDIO PATH
+    AUDIO_PATH: str = "./app/asset/audio/"
 
 
 configs = Configs()

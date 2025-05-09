@@ -13,6 +13,7 @@ from app.services.image_services import ImageService
 from app.services.text_services import TextService
 from app.core.config import configs as CFG
 import py_vncorenlp
+from app.utils.speech import save_audio_file, convert_audio_to_wav, speech_to_text
 
 router = APIRouter(
     prefix="/search",
@@ -23,9 +24,9 @@ router = APIRouter(
 @router.get("/text")
 @inject
 def search_by_text(
-    query: TextRequest,
+    query: Optional[TextRequest] = Query(None),
     limit: int = Query(10, ge=10, le=100),
-    service: TextService = Depends(Provide[Container.text_service]),
+    service: TextService = Depends(Provide[Container.text_service])
 ):
     """
     Search for images using a text query
@@ -38,15 +39,91 @@ def search_by_text(
         List of matching image results
     """
     # Preprocess the query text
-    query = query.text.strip().lower()
-    query = CFG.rdrsegmenter.tokenize(query)[0]
+    query = query.strip().lower()
+    #query = CFG.rdrsegmenter.tokenize(query)[0]
     
+    # Save the query database
+    
+    query = [query]
+    metadata = [{
+        "source": "search",
+        "language": "vi"
+    }] * len(query)
+    service.upload_text(query, metadata)
+    print(f"Successfully uploaded text: {query}")
+    
+    # Perform the search
     print(f"Searching for: {query}")
-    # limit = 2
-    image_paths = service.search_by_text(text=query, limit=limit)
+    limit = 100
+    image_paths = service.search_by_text(text=query[0], limit=limit)
     # print(f"Found {image_paths} image")
     
     
+    # Create FileResponse objects here if you need to return the actual files
+    image_urls = []
+    for path in image_paths:
+        filename = os.path.basename(path)
+        # Create a URL using the /assets/ endpoint
+        image_url = f"/asset/{filename}"
+        image_urls.append(image_url)
+
+    return {"image_urls": image_urls}
+
+
+@router.post("/audio")
+@inject
+async def search_by_audio(
+    file: UploadFile = File(...),
+    limit: int = Query(10, ge=10, le=100),
+    service: TextService = Depends(Provide[Container.text_service])
+):
+    """
+    Search for text using an audio query
+    
+    Args:
+        file: Audio file to search with
+        limit: Maximum number of results to return
+        
+    Returns:
+        List of matching text results
+    """
+    # Read the uploaded audio file
+    content = await file.read()
+    # Save the audio file to a temporary location
+    audio_file_path = os.path.join(
+        CFG.AUDIO_PATH, f"temp_audio_{os.urandom(8).hex()}.wav"
+    )
+    print(f"Audio file path: {audio_file_path}")
+    os.makedirs(CFG.AUDIO_PATH, exist_ok=True)
+    save_audio_file(audio_file_path, content)
+    # Convert the audio file to WAV format
+    wav_file_path = os.path.join(
+        CFG.AUDIO_PATH, f"temp_audio_{os.urandom(8).hex()}.wav"
+    )
+    convert_audio_to_wav(audio_file_path, wav_file_path)
+    # Perform speech-to-text conversion
+    query = speech_to_text(wav_file_path)
+    # Remove the temporary audio file
+    if os.path.exists(audio_file_path):
+        os.remove(audio_file_path)
+        
+    # Preprocess the query text
+    query = query.strip().lower()
+    #query = CFG.rdrsegmenter.tokenize(query)[0]
+    # Save the query database
+    query = [query]
+    metadata = [{
+        "source": "search",
+        "language": "vi"
+    }] * len(query)
+    service.upload_text(query, metadata)
+    print(f"Successfully uploaded text: {query}")
+    
+    # Perform the search
+    print(f"Searching for: {query}")
+    limit = 100
+    image_paths = service.search_by_text(text=query[0], limit=limit)
+    # print(f"Found {image_paths} image")
     # Create FileResponse objects here if you need to return the actual files
     image_urls = []
     for path in image_paths:

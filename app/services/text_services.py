@@ -28,6 +28,8 @@ class TextService(BaseService):
         if metadata is None:
             metadata = [{} for _ in texts]
         
+        
+        
         for item in metadata:
             # Add created_at timestamp to each metadata item
             item['created_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -60,6 +62,7 @@ class TextService(BaseService):
         Search for images using text query.
         """
         # Get text vector embedding
+        
         text_vector = resources.encode_text(text)["vector"]
         
         # Get raw results from repository
