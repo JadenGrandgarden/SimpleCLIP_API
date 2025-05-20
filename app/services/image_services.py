@@ -58,18 +58,30 @@ class ImageService(BaseService):
             image_data = []
             
             for i, image_path in enumerate(image_paths):
-                # Get image vector embedding
-                embedding = resources.encode_image(image_path)
+                try:
+                    # Get image vector embedding
+                    embedding = resources.encode_image(image_path)
 
-                # Create image data entry
-                image_item = {
-                    "image_path": image_paths[i],
-                    "vector": embedding["vector"],
-                    "metadata": metadata[i]
-                }
-                image_data.append(image_item)
-            
+                    # Create image data entry
+                    image_item = {
+                        "image_path": image_paths[i],
+                        "vector": embedding["vector"],
+                        "metadata": metadata[i]
+                    }
+                    image_data.append(image_item)
+                    print(f"Successfully processed image: {image_path}")
+                except Exception as e:
+                    logging.error(f"Error processing image {image_path}: {str(e)}")
+        
+            if not image_data:
+                raise ValueError("No valid images to upload")
+                
             self.image_repository.update_image_data(image_data)
+            
+            # Verify upload by checking if images are retrievable
+            all_images = self.read_all_image()
+            print(f"After upload, found {len(all_images)} total images in database")
+            
             return {"message": f"Successfully uploaded {len(images)} image items"}
         except Exception as e:
             logging.error(f"Error uploading image: {str(e)}")

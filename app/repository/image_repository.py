@@ -16,9 +16,22 @@ class ImageRepository(BaseRepository):
         
     def read_all_image(self):
         """Read all image data from Weaviate."""
-        all_objects = self.read_all()
-        all_images = filter(lambda obj: obj["type"] == "Image", all_objects) 
-        if not all_images:
+        try:
+            with self.session_factory() as client:
+                collection = client.collections.get(configs.WEAVIATE_COLLECTION_NAME)
+                results = collection.query.fetch_objects(
+                    limit=10000,
+                    filters=weaviate.classes.query.Filter.by_property("type").equal("Image")
+                ).objects
+                
+                print(f"Found {len(results)} image objects")
+                
+                images = []
+                for obj in results:
+                    if obj.properties:
+                        images.append(obj.properties)
+                
+                return images
+        except Exception as e:
+            print(f"Error retrieving all images: {e}")
             return []
-        all_images = list(all_images)
-        return all_images

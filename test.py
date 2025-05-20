@@ -96,7 +96,6 @@ def test_upload_image():
 
         print(f"1. Opening image file: {image_path}")
         with open(image_path, "rb") as img_file:
-            # Try with the "files" parameter name
             files = {"file": img_file}
 
             print("2. Sending request to server")
@@ -107,6 +106,21 @@ def test_upload_image():
             )
             print(f"3. Response status: {response.status_code}")
             print(f"4. Response: {response.text}")
+            
+            # Verify upload was successful by checking if image appears in /image/all
+            print("5. Verifying upload by checking /image/all endpoint")
+            verify_response = requests.get(f"{BASE_URL}/image/all")
+            if verify_response.status_code == 200:
+                images = verify_response.json()
+                print(f"6. Retrieved {len(images)} images")
+                filenames = [img.get('image_path', '').split('/')[-1] for img in images]
+                print(f"7. Image filenames: {filenames}")
+                if "cat-1.jpg" in filenames:
+                    print("✓ Upload successful! Image found in database.")
+                else:
+                    print("✗ Upload verification failed. Image not found in database.")
+            else:
+                print(f"✗ Verification request failed with status {verify_response.status_code}")
 
     except Exception as e:
         print(f"Upload image failed: {e}")

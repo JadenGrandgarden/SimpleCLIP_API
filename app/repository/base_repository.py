@@ -91,8 +91,6 @@ class BaseRepository(Protocol):
         """
         
         # Generate UUIDs for each image from image file name
-
-
         with self.session_factory() as client:
             collection = client.collections.get(configs.WEAVIATE_COLLECTION_NAME)
             with collection.batch.dynamic() as batch:
@@ -101,14 +99,16 @@ class BaseRepository(Protocol):
                     properties = {
                         "image_path": item["image_path"],
                         # "image_base64": item.get("image_base64", None),  # Optional base64 image
-                        "Type": "Image",
+                        "type": "Image",  # Changed from "Type" to "type" for consistency
                         "metadata": item.get("metadata", {}),
                     }
-                    print("File UUID: ", item.get("id", str(uuid.uuid5(uuid.NAMESPACE_DNS, item["image_path"].split("/")[-1]))))
+                    image_filename = item["image_path"].split("/")[-1]
+                    image_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, image_filename))
+                    print("File UUID: ", image_id)
                     batch.add_object(
                         properties=properties,
                         vector=item["vector"],
-                        uuid=item.get("id", str(uuid.uuid5(uuid.NAMESPACE_DNS, item["image_path"].split("/")[-1]))),  # Optional UUID
+                        uuid=item.get("id", image_id),  # Optional UUID
                     )
     
     def update_text_data(self, text_data: List[Dict[str, Any]]) -> None:
@@ -182,6 +182,5 @@ class BaseRepository(Protocol):
     def close_scoped_session(self) -> None:
         """Properly close the Weaviate client connection."""
         self._close_client()
-        
 
-        
+
