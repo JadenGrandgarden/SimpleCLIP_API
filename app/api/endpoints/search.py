@@ -12,8 +12,8 @@ from app.core.middleware import inject
 from app.services.image_services import ImageService
 from app.services.text_services import TextService
 from app.core.config import configs as CFG
-import py_vncorenlp
 from app.utils.speech import save_audio_file, convert_audio_to_wav, speech_to_text
+from underthesea import word_tokenize
 
 router = APIRouter(
     prefix="/search",
@@ -40,6 +40,8 @@ def search_by_text(
     """
     # Preprocess the query text
     query = query.strip().lower()
+    query = word_tokenize(query, format="text")
+    # 
     
     # Save the query database
     query = [query]
@@ -113,6 +115,7 @@ async def search_by_audio(
         
     # Preprocess the query text
     query = query.strip().lower()
+    query = word_tokenize(query, format="text")
     
     # Save the query database
     query = [query]

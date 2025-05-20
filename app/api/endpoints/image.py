@@ -5,6 +5,7 @@ from typing import List, Dict, Any, Optional
 from app.core.container import Container
 from app.core.middleware import inject
 from app.services.image_services import ImageService
+import os
 
 router = APIRouter(
     prefix="/image",
@@ -27,7 +28,12 @@ def read_all_images(
         List of images
     """
     print("Fetching all images")
-    return image.read_all_image()
+    images = image.read_all_image()
+    for img in images:
+        if "image_path" in img:
+            filename = os.path.basename(img["image_path"])
+            img["image_url"] = f"/asset/{filename}"
+    return images
 
 
 @router.get("/{image_id}")
