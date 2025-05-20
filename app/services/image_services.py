@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from PIL import Image
 from pathlib import Path
@@ -9,12 +9,10 @@ from app.repository.image_repository import ImageRepository
 from app.services.weavite__service import BaseService
 from app.utils.vectorize import resources
 from app.utils.save_image import save_image
-from typing import Dict, Any
 import base64
 import io
 from datetime import datetime
 import tempfile
-import os
 import logging
 
 class ImageService(BaseService):
@@ -87,7 +85,7 @@ class ImageService(BaseService):
             logging.error(f"Error uploading image: {str(e)}")
             return {"message": f"Failed to upload image: {str(e)}"}
     
-    def search_by_image(self, image_filename: str, limit: int = 5) -> List[Dict[str, Any]]:
+    def search_by_image(self, image_filename: str, limit: int = 5) -> Dict[str, Any]:
         """
         Search for text using image query.
         
@@ -96,15 +94,32 @@ class ImageService(BaseService):
             limit: Maximum number of results to return
             
         Returns:
-            List of search results
+            List of search results with similarity scores
         """
         # Get image vector embedding
         image_vector = resources.encode_image(image_filename)["vector"]
        
-        
         # Search in text repository using the image vector
-        return self.image_repository.read_by_vector(
+        results = self.image_repository.read_by_vector(
             search_vector=image_vector,
             type_filter="Text",
             limit=limit
         )
+        
+        # Process results with similarity scores
+        ranked_texts = []
+        
+        for result in results.objects:
+            if result.properties.get("text"):
+                ranked_texts.append({
+                    "text": result.properties["text"],
+                    "similarity": round(result.metadata.certainty * 100, 2),  # Convert to percentage
+                    "rank": result.metadata.rank,
+                    "metadata": result.properties.get("metadata", {})
+                })
+        
+        # Return text results and ranked results
+        return {
+            "text": [item["text"] for item in ranked_texts],
+            "ranked_results": ranked_texts
+        }

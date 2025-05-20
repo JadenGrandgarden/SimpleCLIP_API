@@ -33,10 +33,17 @@ def test_search_by_text():
         results = response.json()
         print(f"Query: '{query}'")
         print(results)
-        print(f"Found {len(results['response_files'])} results")
+        print(f"Found {len(results.get('image_urls', []))} results")
         print("\n")
-        for i, image_path in enumerate(results["response_files"]):
-            print(f"Result {i + 1}: {image_path}")
+        
+        # Display ranked results if available
+        if 'ranked_results' in results:
+            print("Ranked Results:")
+            for item in results['ranked_results']:
+                print(f"Rank: {item['rank']}, Similarity: {item['similarity']}%, Image: {item['image_path']}")
+        else:
+            for i, image_path in enumerate(results.get("image_urls", [])):
+                print(f"Result {i + 1}: {image_path}")
         print("\n")
     except Exception as e:
         print(f"Search by text failed: {e}")
@@ -56,9 +63,16 @@ def test_search_by_image():
 
         print("Search by Image:")
         results = response.json()
-        print(results)
         print(f"Image: '{image_path}'")
-        print(f"Found {len(results['text'])} results")
+        print(f"Found {len(results.get('text', []))} results")
+        
+        # Display ranked results if available
+        if 'ranked_results' in results:
+            print("Ranked Results:")
+            for item in results['ranked_results']:
+                print(f"Rank: {item['rank']}, Similarity: {item['similarity']}%, Text: {item['text']}")
+        else:
+            print(results)
     except Exception as e:
         print(f"Search by image failed: {e}")
         print("\n")

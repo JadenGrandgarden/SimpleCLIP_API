@@ -1,6 +1,6 @@
 from dependency_injector.wiring import Provide
 from fastapi import APIRouter, Depends, UploadFile, File, Query, HTTPException
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import io
 from PIL import Image
 import os
@@ -36,14 +36,12 @@ def search_by_text(
         limit: Maximum number of results to return
         
     Returns:
-        List of matching image results
+        List of matching image results with similarity scores
     """
     # Preprocess the query text
     query = query.strip().lower()
-    #query = CFG.rdrsegmenter.tokenize(query)[0]
     
     # Save the query database
-    
     query = [query]
     metadata = [{
         "source": "search",
@@ -54,20 +52,26 @@ def search_by_text(
     
     # Perform the search
     print(f"Searching for: {query}")
-    limit = 100
-    image_paths = service.search_by_text(text=query[0], limit=limit)
-    # print(f"Found {image_paths} image")
+    search_results = service.search_by_text(text=query[0], limit=limit)
     
-    
-    # Create FileResponse objects here if you need to return the actual files
+    # Convert image paths to URLs
     image_urls = []
-    for path in image_paths:
+    for path in search_results["response_files"]:
         filename = os.path.basename(path)
         # Create a URL using the /assets/ endpoint
         image_url = f"/asset/{filename}"
         image_urls.append(image_url)
-
-    return {"image_urls": image_urls}
+    
+    # Add URLs to the ranked results
+    ranked_results = search_results["ranked_results"]
+    for item in ranked_results:
+        item["image_url"] = f"/asset/{os.path.basename(item['image_path'])}"
+    
+    return {
+        "image_urls": image_urls,
+        "ranked_results": ranked_results,
+        "query": query[0]
+    }
 
 
 @router.post("/audio")
@@ -85,7 +89,7 @@ async def search_by_audio(
         limit: Maximum number of results to return
         
     Returns:
-        List of matching text results
+        List of matching text results with similarity scores
     """
     # Read the uploaded audio file
     content = await file.read()
@@ -109,7 +113,7 @@ async def search_by_audio(
         
     # Preprocess the query text
     query = query.strip().lower()
-    #query = CFG.rdrsegmenter.tokenize(query)[0]
+    
     # Save the query database
     query = [query]
     metadata = [{
@@ -121,21 +125,29 @@ async def search_by_audio(
     
     # Perform the search
     print(f"Searching for: {query}")
-    limit = 100
-    image_paths = service.search_by_text(text=query[0], limit=limit)
-    # print(f"Found {image_paths} image")
-    # Create FileResponse objects here if you need to return the actual files
+    search_results = service.search_by_text(text=query[0], limit=limit)
+    
+    # Convert image paths to URLs
     image_urls = []
-    for path in image_paths:
+    for path in search_results["response_files"]:
         filename = os.path.basename(path)
         # Create a URL using the /assets/ endpoint
         image_url = f"/asset/{filename}"
         image_urls.append(image_url)
+    
+    # Add URLs to the ranked results
+    ranked_results = search_results["ranked_results"]
+    for item in ranked_results:
+        item["image_url"] = f"/asset/{os.path.basename(item['image_path'])}"
 
-    return {"query": query[0],"image_urls": image_urls}
+    return {
+        "query": query[0],
+        "image_urls": image_urls,
+        "ranked_results": ranked_results
+    }
 
 
-@router.post("/image", response_model=TextSearchResponse)
+@router.post("/image")
 @inject
 async def search_by_image(
     file: UploadFile = File(...),
@@ -150,7 +162,7 @@ async def search_by_image(
         limit: Maximum number of results to return
         
     Returns:
-        List of matching text results
+        List of matching text results with similarity scores
     """
     try:
         # Read the uploaded image
@@ -171,13 +183,11 @@ async def search_by_image(
         # Call service to perform the search
         results = service.search_by_image(image_filename=temp_file_path, limit=limit)
 
-        # Extract text results
-        text_results = []
-        for obj in results.objects:
-            if obj.properties.get("text"):
-                text_results.append(obj.properties["text"])
-
-        return TextSearchResponse(text=text_results)
+        return {
+            "text": results["text"],
+            "ranked_results": results["ranked_results"],
+            "image_name": file.filename
+        }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")

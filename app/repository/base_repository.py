@@ -165,12 +165,31 @@ class BaseRepository(Protocol):
         """Read entities by vector."""
         with self.session_factory() as client:
             collection = client.collections.get(configs.WEAVIATE_COLLECTION_NAME)
-            entities = collection.query.near_vector(
-            near_vector=search_vector,
-            filters = Filter.by_property("type").equal(type_filter),
-            limit=limit
+            results = collection.query.near_vector(
+                near_vector=search_vector,
+                filters=Filter.by_property("type").equal(type_filter),
+                limit=limit,
+                include_vector=True,  # Include vector to calculate exact similarity
+                return_metadata=weaviate.classes.query.MetadataQuery(
+                    distance=True,  # Include distance in results
+                    certainty=True,  # Include certainty/similarity score
+                )
             )
-            return entities if entities else []
+            
+            # Sort results by certainty (similarity score) in descending order
+            if results and hasattr(results, 'objects') and results.objects:
+                # Sort by certainty (higher is better)
+                results.objects.sort(key=lambda x: x.metadata.certainty, reverse=True)
+                
+                # Add rank to each result
+                for i, obj in enumerate(results.objects):
+                    if not hasattr(obj, 'metadata'):
+                        obj.metadata = type('obj', (), {})()
+                    obj.metadata.rank = i + 1
+                
+                print(f"Found {len(results.objects)} results, sorted by similarity score")
+            
+            return results if results else []
         
     def delete_by_id(self, id: str) -> None:
         """Delete an entity by its ID."""

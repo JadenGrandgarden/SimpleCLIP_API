@@ -1,9 +1,8 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from pathlib import Path
 from app.repository.text_repository import TextRepository
 from app.services.weavite__service import BaseService
 from app.utils.vectorize import resources
-from typing import Dict, Any
 from datetime import datetime
 
 class TextService(BaseService):
@@ -66,7 +65,6 @@ class TextService(BaseService):
         Search for images using text query.
         """
         # Get text vector embedding
-        
         text_vector = resources.encode_text(text)["vector"]
         
         # Get raw results from repository
@@ -76,14 +74,23 @@ class TextService(BaseService):
             limit=limit
         )
         
-        image_paths = []
+        # Process results with similarity scores
+        ranked_results = []
+        
         for result in raw_results.objects:
             if result.properties.get("image_path"):
                 image_path = Path(result.properties["image_path"])
                 if image_path.exists():
-                    image_paths.append(str(image_path))
+                    ranked_results.append({
+                        "image_path": str(image_path),
+                        "similarity": round(result.metadata.certainty * 100, 2),  # Convert to percentage
+                        "rank": result.metadata.rank
+                    })
                 else:
                     print(f"Warning: Image file not found: {image_path}")
 
-        return image_paths
-            
+        # Return formatted results
+        return {
+            "response_files": [item["image_path"] for item in ranked_results],
+            "ranked_results": ranked_results
+        }
