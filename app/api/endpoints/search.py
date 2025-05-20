@@ -12,7 +12,8 @@ from app.core.middleware import inject
 from app.services.image_services import ImageService
 from app.services.text_services import TextService
 from app.core.config import configs as CFG
-import py_vncorenlp
+from underthesea import word_tokenize
+# import py_vncorenlp
 
 router = APIRouter(
     prefix="/search",
@@ -38,8 +39,9 @@ def search_by_text(
         List of matching image results
     """
     # Preprocess the query text
-    query = query.text.strip().lower()
-    query = CFG.rdrsegmenter.tokenize(query)[0]
+    # print(query)
+    query = query.strip().lower()
+    query = word_tokenize(query, format="text")
     
     print(f"Searching for: {query}")
     # limit = 2
