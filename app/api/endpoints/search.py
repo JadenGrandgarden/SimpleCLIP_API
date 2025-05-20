@@ -132,13 +132,13 @@ async def search_by_audio(
         image_url = f"/asset/{filename}"
         image_urls.append(image_url)
 
-    return {"image_urls": image_urls}
+    return {"query": query[0],"image_urls": image_urls}
 
 
 @router.post("/image", response_model=TextSearchResponse)
 @inject
 async def search_by_image(
-    file: ImageRequest = File(...),
+    file: UploadFile = File(...),
     limit: int = Query(5, ge=1, le=100),
     service: ImageService = Depends(Provide[Container.image_service]),
 ):

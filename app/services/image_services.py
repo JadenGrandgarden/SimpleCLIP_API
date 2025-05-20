@@ -27,6 +27,7 @@ class ImageService(BaseService):
         
     def read_all_image(self) -> List[Dict[str, Any]]:
         """Read all image data from the repository."""
+        # print("Length of all images:", len(self.image_repository.read_all_image()))
         all_images = self.image_repository.read_all_image()
         return all_images
     
@@ -41,34 +42,38 @@ class ImageService(BaseService):
         Returns:
             Dictionary with upload status message
         """
-        # Save images to local storage
-        image_paths = save_image(images, images_filename, metadata)
-        
-        if metadata is None:
-            metadata = [{} for _ in images]
-        for item in metadata:
-            # Add created_at timestamp to each metadata item
-            item['created_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        try:
+            # Save images to local storage
+            image_paths = save_image(images, images_filename, metadata)
             
-        if len(images) != len(image_paths) or len(images) != len(metadata):
-            raise ValueError("Length of images, image_paths, and metadata must match")
-        
-        image_data = []
-        
-        for i, image_path in enumerate(image_paths):
-            # Get image vector embedding
-            embedding = resources.encode_image(image_path)
+            if metadata is None:
+                metadata = [{} for _ in images]
+            for item in metadata:
+                # Add created_at timestamp to each metadata item
+                item['created_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                
+            if len(images) != len(image_paths) or len(images) != len(metadata):
+                raise ValueError("Length of images, image_paths, and metadata must match")
+            
+            image_data = []
+            
+            for i, image_path in enumerate(image_paths):
+                # Get image vector embedding
+                embedding = resources.encode_image(image_path)
 
-            # Create image data entry
-            image_item = {
-                "image_path": image_paths[i],
-                "vector": embedding["vector"],
-                "metadata": metadata[i]
-            }
-            image_data.append(image_item)
-        
-        self.image_repository.update_image_data(image_data)
-        return {"message": f"Successfully uploaded {len(images)} image items"}
+                # Create image data entry
+                image_item = {
+                    "image_path": image_paths[i],
+                    "vector": embedding["vector"],
+                    "metadata": metadata[i]
+                }
+                image_data.append(image_item)
+            
+            self.image_repository.update_image_data(image_data)
+            return {"message": f"Successfully uploaded {len(images)} image items"}
+        except Exception as e:
+            logging.error(f"Error uploading image: {str(e)}")
+            return {"message": f"Failed to upload image: {str(e)}"}
     
     def search_by_image(self, image_filename: str, limit: int = 5) -> List[Dict[str, Any]]:
         """

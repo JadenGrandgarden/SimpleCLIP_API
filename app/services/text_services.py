@@ -25,36 +25,40 @@ class TextService(BaseService):
         Returns:
             Dictionary with upload status message
         """
-        if metadata is None:
-            metadata = [{} for _ in texts]
-        
-        
-        
-        for item in metadata:
-            # Add created_at timestamp to each metadata item
-            item['created_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
-        if len(texts) != len(metadata):
-            raise ValueError("Length of texts and metadata must match")
-        
-        # Process and prepare text data
-        text_data = []
-        for i, text in enumerate(texts):
-            # Get text vector embedding
-            embedding = resources.encode_text(text)
+        try:
+            if metadata is None:
+                metadata = [{} for _ in texts]
             
-            # Create text data entry
-            text_item = {
-                "text": text,
-                "vector": embedding["vector"],
-                "metadata": metadata[i]
-            }
-            text_data.append(text_item)
-        
-        # Upload to repository
-        self.text_repository.update_text_data(text_data)
-        
-        return {"message": f"Successfully uploaded {len(texts)} text items"}
+            
+            
+            for item in metadata:
+                # Add created_at timestamp to each metadata item
+                item['created_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            if len(texts) != len(metadata):
+                raise ValueError("Length of texts and metadata must match")
+            
+            # Process and prepare text data
+            text_data = []
+            for i, text in enumerate(texts):
+                # Get text vector embedding
+                embedding = resources.encode_text(text)
+                
+                # Create text data entry
+                text_item = {
+                    "text": text,
+                    "vector": embedding["vector"],
+                    "metadata": metadata[i]
+                }
+                text_data.append(text_item)
+            
+            # Upload to repository
+            self.text_repository.update_text_data(text_data)
+            
+            return {"message": f"Successfully uploaded {len(texts)} text items"}
+        except Exception as e:
+            print(f"Error uploading text: {str(e)}")
+            return {"message": f"Failed to upload text: {str(e)}"}
     
 
     def search_by_text(self, text: str, limit: int = 10):
