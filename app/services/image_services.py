@@ -1,17 +1,10 @@
-import os
-import logging
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from PIL import Image
-from pathlib import Path
-from app.core.config import configs
+from datetime import datetime
 from app.repository.image_repository import ImageRepository
-from app.services.weavite__service import BaseService
+from app.services.weaviate_service import BaseService
 from app.utils.vectorize import resources
 from app.utils.save_image import save_image
-from typing import Dict, Any
-import base64
-import io
-from datetime import datetime
 
 class ImageService(BaseService):
     """Service for handling image operations in the repository."""

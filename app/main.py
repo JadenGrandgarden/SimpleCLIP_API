@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
+from loguru import logger
 from app.core.config import configs
 from app.core.container import Container
 from app.utils.class_object import singleton
 from app.api.routes import api_router
-# from app.core.middleware import request_debug_middleware
 
 
 @singleton
@@ -15,8 +15,6 @@ class AppCreator:
             title=configs.PROJECT_NAME,
             version="0.0.1"
         )
-        
-        # self.app.middleware("http")(request_debug_middleware)
 
         # set db and container
         self.container = Container()
@@ -37,9 +35,8 @@ class AppCreator:
         @self.app.get("/")
         def root():
             return "service is working"
-        
-        print("main.py: api_router created")
 
+        logger.info("API router initialized")
         self.app.include_router(api_router)
 
 
