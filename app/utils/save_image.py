@@ -1,7 +1,9 @@
 import os
-from PIL import Image
 from typing import List, Optional, Dict, Any
+
+from PIL import Image
 from loguru import logger
+
 from app.core.config import configs
 
 def save_image(images: List[Image.Image], images_filename: List[str],

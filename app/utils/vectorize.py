@@ -3,6 +3,7 @@ import torch
 import torchvision.transforms as transforms
 from transformers import AutoTokenizer
 from loguru import logger
+
 from app.utils.simple_clip.clip import CLIP
 from app.utils.simple_clip.utils import get_image_encoder, get_text_encoder
 from app.core.config import configs
