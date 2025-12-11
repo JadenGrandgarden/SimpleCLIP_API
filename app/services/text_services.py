@@ -1,10 +1,10 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from pathlib import Path
-from app.repository.text_repository import TextRepository
-from app.services.weavite__service import BaseService
-from app.utils.vectorize import resources
-from typing import Dict, Any
 from datetime import datetime
+from loguru import logger
+from app.repository.text_repository import TextRepository
+from app.services.weaviate_service import BaseService
+from app.utils.vectorize import resources
 
 class TextService(BaseService):
     """Service for handling text operations in the repository."""
@@ -76,7 +76,7 @@ class TextService(BaseService):
                 if image_path.exists():
                     image_paths.append(str(image_path))
                 else:
-                    print(f"Warning: Image file not found: {image_path}")
+                    logger.warning(f"Image file not found: {image_path}")
 
         return image_paths
             

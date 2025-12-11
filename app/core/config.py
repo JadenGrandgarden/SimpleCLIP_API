@@ -1,7 +1,5 @@
-import os
 from typing import List
 
-# from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 
 class Configs(BaseSettings):
@@ -9,7 +7,6 @@ class Configs(BaseSettings):
     Configuration settings for the application.
     """
     # base
-    # ENV: str = os.getenv("ENV", "dev")
     API: str = "/api"
     PROJECT_NAME: str = "Simple CLIP"
     # CORS
@@ -33,6 +30,4 @@ class Configs(BaseSettings):
     WEAVIATE_COLLECTION_NAME: str = "MultimodalData"
 
 configs = Configs()
-
-    
     

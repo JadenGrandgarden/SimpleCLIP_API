@@ -1,10 +1,11 @@
 from fastapi import APIRouter, HTTPException
-from app.models.schemas import TextRequest, ImageRequest, TextVectorResponse, ImageVectorResponse
-from app.core.initialization import get_resources
 import torch
 import base64
 import io
 from PIL import Image
+from loguru import logger
+from app.models.schemas import TextRequest, ImageRequest, TextVectorResponse, ImageVectorResponse
+from app.core.initialization import get_resources
 
 router = APIRouter()
 
@@ -12,10 +13,9 @@ router = APIRouter()
 async def vectorize_text(request: TextRequest):
     # Get initialized resources
     resources = get_resources()
-    
+
     text = request.text
-    print(f"Received text: {text}")
-    print(f"Using device: {resources.device}")
+    logger.info(f"Vectorizing text, device: {resources.device}")
     
     if resources.tokenizer is None:
         raise HTTPException(status_code=500, detail="Tokenizer not initialized")

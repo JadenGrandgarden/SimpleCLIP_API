@@ -1,15 +1,15 @@
 from dependency_injector.wiring import Provide
-from fastapi import APIRouter, Depends, UploadFile, File, Form
-from typing import List, Dict, Any, Optional
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
+from typing import Dict, Any
 import json
 from PIL import Image
 import io
-from app.schemas.schemas import UploadResponse, TextRequest, ImageRequest
+from loguru import logger
+from app.schemas.schemas import UploadResponse
 from app.core.container import Container
 from app.core.middleware import inject
 from app.services.image_services import ImageService
 from app.services.text_services import TextService
-from fastapi import HTTPException
 
 
 router = APIRouter(
@@ -27,9 +27,8 @@ def upload_text(
     """Upload text data to the vector database"""
     metadata = request_data.get("metadata", None)
     texts = request_data.get("texts", None)
-    
-    print(f"Received metadata: {metadata}")
-    print(f"Received texts: {texts}")
+
+    logger.info(f"Uploading {len(texts) if texts else 0} text items")
     return service.upload_text(texts, metadata)
 
 
@@ -41,9 +40,8 @@ async def upload_image(
     service: ImageService = Depends(Provide[Container.image_service])
 ):
     """Upload image files to the vector database"""
-    
+
     try:
-        
         # Process single uploaded image
         content = await file.read()
         # Parse metadata
@@ -51,14 +49,14 @@ async def upload_image(
         img = Image.open(io.BytesIO(content)).convert('RGB')
         images = [img]  # Create a list with the single image
         images_filename = [file.filename]
-        
-        print(f"Processed image: {file.filename}, size: {img.size}")
-        
+
+        logger.info(f"Processing image upload: {file.filename}, size: {img.size}")
+
         # Call service with single image in a list
-        response = service.upload_image(images,images_filename, metadata)
+        response = service.upload_image(images, images_filename, metadata)
         if not isinstance(response, dict):
             return {"message": "Image uploaded successfully"}
         return response
     except Exception as e:
-        print(f"Error processing upload: {str(e)}")
+        logger.error(f"Error processing upload: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")

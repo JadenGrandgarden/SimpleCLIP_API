@@ -58,5 +58,4 @@ class BaseService:
     
     def close_scoped_session(self):
         self.repository.close_scoped_session()
-        
     

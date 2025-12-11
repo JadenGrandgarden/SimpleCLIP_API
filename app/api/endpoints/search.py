@@ -1,9 +1,8 @@
 from dependency_injector.wiring import Provide
-from fastapi import APIRouter, Depends, UploadFile, File, Query
-from typing import List, Optional
+from fastapi import APIRouter, Depends, File, Query
 import io
 from PIL import Image
-import base64
+from loguru import logger
 from app.schemas.schemas import TextSearchResponse, ImageRequest, TextRequest
 from fastapi.responses import FileResponse
 from app.core.container import Container
@@ -26,22 +25,21 @@ def search_by_text(
 ):
     """
     Search for images using a text query
-    
+
     Args:
         query: Text to search with
         limit: Maximum number of results to return
-        
+
     Returns:
         List of matching image results
     """
     image_paths = service.search_by_text(text=query, limit=limit)
-    
+
     # Create FileResponse objects here if you need to return the actual files
     response_files = []
     for path in image_paths:
         response_files.append(FileResponse(path, media_type="image/jpeg"))
-    print(response_files)
-    # Otherwise return list of paths that can be requested individually
+    logger.info(f"Found {len(response_files)} images matching text query")
     return {"response_files": response_files}
 
 
@@ -54,22 +52,22 @@ async def search_by_image(
 ):
     """
     Search for text using an image query
-    
+
     Args:
         file: Image file to search with
         limit: Maximum number of results to return
-        
+
     Returns:
         List of matching text results
     """
     content = await file.read()
     image = Image.open(io.BytesIO(content)).convert('RGB')
-    
+
     results = service.search_by_image(image=image, limit=limit)
-    
-    
+
     text_results = []
     for obj in results.objects:
         if obj.properties.get("text"):
             text_results.append(obj.properties["text"])
+    logger.info(f"Found {len(text_results)} texts matching image query")
     return TextSearchResponse(text=text_results)
